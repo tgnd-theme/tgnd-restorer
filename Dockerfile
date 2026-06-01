@@ -12,13 +12,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir \
     torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cu118
 
+# Numpy first (required by torch, realesrgan, gfpgan)
+RUN pip install --no-cache-dir numpy==1.26.4
+
 # App deps
 RUN pip install --no-cache-dir \
     runpod==1.7.0 \
     realesrgan \
     gfpgan \
     opencv-python-headless>=4.7.0 \
-    numpy \
     Pillow
 
 # Download model weights (~480MB total)
