@@ -8,12 +8,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /usr/bin/python3 /usr/bin/python
 
-# PyTorch (CPU-friendly install, CUDA handled at runtime)
+# PyTorch (CUDA 11.8)
 RUN pip install --no-cache-dir \
     torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cu118
-
-# Numpy first (required by torch, realesrgan, gfpgan)
-RUN pip install --no-cache-dir numpy==1.26.4
 
 # App deps
 RUN pip install --no-cache-dir \
@@ -22,6 +19,12 @@ RUN pip install --no-cache-dir \
     gfpgan \
     opencv-python-headless>=4.7.0 \
     Pillow
+
+# Force-reinstall numpy last to fix any version conflicts
+RUN pip install --no-cache-dir --force-reinstall numpy==1.26.4
+
+# Verify numpy works
+RUN python -c "import numpy; print(f'numpy {numpy.__version__} OK')"
 
 # Download model weights (~480MB total)
 RUN mkdir -p /app/weights /app/gfpgan/weights
@@ -42,5 +45,8 @@ RUN wget -q -O /app/gfpgan/weights/parsing_parsenet.pth \
     https://github.com/xinntao/facexlib/releases/download/v0.2.2/parsing_parsenet.pth
 
 COPY handler.py .
+
+# Verify all imports work
+RUN python -c "import numpy, cv2, runpod; from PIL import Image; print('All imports OK')"
 
 CMD ["python", "-u", "handler.py"]
